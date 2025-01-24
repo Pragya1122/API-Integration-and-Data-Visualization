@@ -1,0 +1,59 @@
+import requests
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# OpenWeatherMap API Key
+API_KEY = '76b430e7fa5de729232486aba54fdeb6'
+CITY_NAME = 'India'
+
+# API URL to fetch weather data (Forecast for 5 days)
+url = f'https://api.openweathermap.org/data/2.5/forecast?q={CITY_NAME}&appid={API_KEY}&units=metric'
+
+# Make the GET request to the OpenWeatherMap API
+response = requests.get(url)
+
+# Check if the request was successful
+if response.status_code == 200:
+    # Parse the JSON response
+    data = response.json()
+
+    # Extracting the relevant data
+    weather_data = []
+    for entry in data['list']:
+        date_time = entry['dt_txt']
+        temp = entry['main']['temp']
+        humidity = entry['main']['humidity']
+        weather_data.append([date_time, temp, humidity])
+
+    # Convert the list into a DataFrame for easier manipulation
+    df = pd.DataFrame(weather_data, columns=['DateTime', 'Temperature', 'Humidity'])
+
+    # Convert DateTime column to datetime type for easier plotting
+    df['DateTime'] = pd.to_datetime(df['DateTime'])
+
+    # Print the first few rows of the data
+    print(df.head())
+
+    # Create visualizations
+    plt.figure(figsize=(12, 6))
+    
+    # Line plot for temperature over time
+    sns.lineplot(x='DateTime', y='Temperature', data=df, label='Temperature (°C)', color='blue')
+    
+    # Line plot for humidity over time
+    sns.lineplot(x='DateTime', y='Humidity', data=df, label='Humidity (%)', color='green')
+    
+    plt.title(f'Weather Forecast for {CITY_NAME}', fontsize=16)
+    plt.xlabel('DateTime', fontsize=12)
+    plt.ylabel('Value', fontsize=12)
+    plt.legend()
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.grid(True)
+    
+    # Show the plot
+    plt.show()
+
+else:
+    print("Failed to fetch data from OpenWeatherMap. Status Code:", response.status_code)
